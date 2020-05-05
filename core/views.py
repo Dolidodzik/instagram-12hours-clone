@@ -13,12 +13,29 @@ from django.shortcuts import redirect
 from rest_framework.views import APIView
 from django.db import IntegrityError
 import json
+import datetime
 
 
 class PostViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        follow_number = request.query_params.get('feed_number') # number of days that posts are posted between
+        if not follow_number:
+            follow_number = 1
+        followed = Followship.objects.filter(follower=request.user)
+        followed_users = []
+        for follow in followed:
+            followed_users.append(follow.followed)
+
+        today = datetime.date.today()
+        startdate = today + datetime.timedelta(days=follow_number-1)
+        enddate = today + datetime.timedelta(days=follow_number)
+
+        posts = Post.objects.filter(owner__in=followed_users, created_date__range=[startdate, enddate]).order_by("created_date")
+        return Response(PostSerializer(posts, many=True).data)
 
 class CustomUserViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
