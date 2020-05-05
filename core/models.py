@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+
+
 
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -14,6 +17,14 @@ class CustomUser(AbstractUser, BaseModel):
     followedCount = models.IntegerField(default=0) # users that are followed by this user
     description = models.TextField(default="")
     profile_image = models.ImageField(upload_to="profile_images/", default="defaults/profile_image.png")
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.followersCount = 0
+            self.followedCount = 0
+        super(CustomUser, self).save(*args, **kwargs)
+
+
 
 class Post(BaseModel):
     description = models.TextField(default="")
