@@ -1,6 +1,6 @@
 import React from 'react';
 import Register from './components/register';
-
+import Login from './components/login';
 
 import {
   BrowserRouter as Router,
@@ -16,8 +16,10 @@ function App() {
       <Router>
         <Switch>
 
-          <Route path="/register">
-            <Register />
+          <Route path="/register" component={Register}>
+          </Route>
+
+          <Route path="/login" component={Login}>
           </Route>
 
         </Switch>
