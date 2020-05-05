@@ -16,15 +16,16 @@ class BaseModel(models.Model):
 
 class CustomUser(AbstractUser, BaseModel):
     email = models.EmailField(unique=True)
-    followersCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)]) # users that follow this user
-    followedCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)]) # users that are followed by this user
-    description = models.TextField(default="")
-    profile_image = models.ImageField(upload_to="profile_images/", default="defaults/profile_image.png", validators=[validate_image])
+    followersCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)], null=True, blank=True) # users that follow this user
+    followedCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)], null=True, blank=True) # users that are followed by this user
+    description = models.TextField(default="", null=True, blank=True)
+    profile_image = models.ImageField(upload_to="profile_images/", default="defaults/profile_image.png", validators=[validate_image], null=True, blank=True)
     chatted_with = ListCharField( # list of users (user ids) that user chatted with
         base_field=CharField(max_length=10),
         size=10,
         max_length=(10 * 20),  # 6 * 10 character nominals, plus commas
-        default=[]
+        default=[],
+        null=True, blank=True
     )
 
     def save(self, *args, **kwargs):
@@ -32,7 +33,6 @@ class CustomUser(AbstractUser, BaseModel):
             self.followersCount = 0
             self.followedCount = 0
         super(CustomUser, self).save(*args, **kwargs)
-
 
 
 class Post(BaseModel):

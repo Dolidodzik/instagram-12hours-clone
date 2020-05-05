@@ -31,6 +31,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'followersCount', 'followedCount', 'is_already_followed', 'created_date', 'modified_date', 'description', 'profile_image', 'username')
         read_only_fields =  ('id', 'followersCount', 'followedCount', 'modified_date', 'created_date')
 
+
 class FollowshipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Followship
