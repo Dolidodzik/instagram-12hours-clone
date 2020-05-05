@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.validators import MaxValueValidator, MinValueValidator
+from core.validators import *
 
 
 class BaseModel(models.Model):
@@ -16,14 +17,13 @@ class CustomUser(AbstractUser, BaseModel):
     followersCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)]) # users that follow this user
     followedCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)]) # users that are followed by this user
     description = models.TextField(default="")
-    profile_image = models.ImageField(upload_to="profile_images/", default="defaults/profile_image.png")
+    profile_image = models.ImageField(upload_to="profile_images/", default="defaults/profile_image.png", validators=[validate_image])
 
     def save(self, *args, **kwargs):
         if not self.pk:
             self.followersCount = 0
             self.followedCount = 0
         super(CustomUser, self).save(*args, **kwargs)
-
 
 
 class Post(BaseModel):
