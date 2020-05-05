@@ -138,6 +138,17 @@ class CommentViewset(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
 
+    def create(self, request):
+        post = Post.objects.filter(pk=request.data["post"]).first()
+
+        if not post:
+            return Response("post with given id does not exist")
+
+        comment = Comment.objects.create(owner=request.user, text=request.data["text"], post=post)
+        comment_qs = Comment.objects.filter(pk=comment.pk)
+
+        return Response(self.get_serializer(comment_qs, many=True).data)
+
 class MessageViewset(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = MessageSerializer
