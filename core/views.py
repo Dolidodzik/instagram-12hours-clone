@@ -34,7 +34,7 @@ class PostViewset(viewsets.ModelViewSet):
         startdate = today + datetime.timedelta(days=follow_number-1)
         enddate = today + datetime.timedelta(days=follow_number)
 
-        posts = Post.objects.filter(owner__in=followed_users, created_date__range=[startdate, enddate]).order_by("created_date")
+        posts = Post.objects.filter(Q(owner__in=followed_users) & Q(Q(created_date__range=[startdate, enddate]) | Q(id__range=[follow_number, follow_number+30]))).order_by("created_date")[:50]
         return Response(PostSerializer(posts, many=True).data)
 
 class CustomUserViewset(viewsets.ModelViewSet):
@@ -131,7 +131,7 @@ class CommentViewset(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
 
-class MessageViewset(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class MessageViewset(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = MessageSerializer
     queryset = Message.objects.all()
@@ -145,9 +145,22 @@ class MessageViewset(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.Ge
             other_user = CustomUser.objects.filter(pk=other_user_id).first()
             if other_user:
                 last_msg = Message.objects.filter(Q(sender=other_user, receiver=request.user) | Q(receiver=other_user, sender=request.user)).order_by("created_date").first()
-                conversations.append({"username": other_user.username, "profile_image": other_user.profile_image.url, "last_msg": last_msg.content, "who_sent_last_message": last_msg.sender.username})
+                conversations.append({"username": other_user.username, "profile_image": other_user.profile_image.url, "last_msg": last_msg.content, "who_sent_last_message": last_msg.sender.username, "user_id": other_user.pk})
 
         return Response(conversations)
+
+    def retrieve(self, request, pk=None): # IN THIS CASE "pk" IS ID OF OTHER USER, THAT USER WANTS TO SEE CONVERSATION WITH
+        other_user = CustomUser.objects.filter(pk=pk).first()
+
+        if not other_user:
+            return Response("given user does not exist")
+
+        messages = Message.objects.filter(Q(sender=request.user, receiver=other_user) | Q(sender=other_user, receiver=request.user)).order_by("created_date")
+
+        if not messages.first():
+            return Response("messages are empty")
+
+        return Response(self.get_serializer(messages, many=True).data)
 
     def create(self, request):
         request_user = request.user
