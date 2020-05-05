@@ -7,10 +7,12 @@ from django.conf.urls.static import static
 from core import views
 
 router = routers.DefaultRouter()
-router.register(r'posts', views.CommentViewset)
+router.register(r'posts', views.PostViewset)
 router.register(r'users', views.CustomUserViewset)
 router.register(r'followships', views.FollowshipViewset)
 router.register(r'postLikes', views.PostLikeViewset)
+router.register(r'commentLikes', views.CommentLikeViewset)
+router.register(r'comments', views.CommentViewset)
 
 urlpatterns = [
     path('api/v0/', include(router.urls)),

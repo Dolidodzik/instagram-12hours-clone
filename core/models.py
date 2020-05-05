@@ -40,8 +40,21 @@ class Followship(BaseModel):
     class Meta:
         unique_together = ('follower', 'followed')
 
+class Comment(BaseModel):
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="commented_post", blank=True, null=True)
+    parent_comment = models.ForeignKey('self', on_delete=models.CASCADE, related_name="reply_to_comment", blank=True, null=True)
+    text = models.CharField(max_length=500)
+    likesCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)])
+
 class PostLike(BaseModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="liked_post", blank=True, null=True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="photo_liker")
     class Meta:
         unique_together = ('post', 'owner')
+
+class CommentLike(BaseModel):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="liked_comment", blank=True, null=True)
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="comment_liker")
+    class Meta:
+        unique_together = ('comment', 'owner')

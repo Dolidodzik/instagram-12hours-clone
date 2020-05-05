@@ -37,8 +37,30 @@ class FollowshipSerializer(serializers.ModelSerializer):
         fields = ('follower', 'followed', 'created_date', 'modified_date')
         read_only_fields = ('follower', 'followed', 'created_date', 'modified_date')
 
+
+class CommentSerializer(serializers.ModelSerializer):
+    is_already_liked = serializers.SerializerMethodField('isAlreadyLiked')
+
+    def isAlreadyLiked(self, instance):
+        if CommentLike.objects.filter(comment=instance).first():
+            return True
+        else:
+            return False
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'owner', 'likesCount', 'text', 'is_already_liked', 'created_date', 'modified_date')
+        read_only_fields =  ('id', 'likes', 'created_date', 'modified_date', 'owner')
+
+
 class PostLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostLike
         fields = ('post', 'owner', 'created_date', 'modified_date')
         read_only_fields = ('post', 'owner', 'created_date', 'modified_date')
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommentLike
+        fields = ('comment', 'owner', 'created_date', 'modified_date')
+        read_only_fields = ('comment', 'owner', 'created_date', 'modified_date')

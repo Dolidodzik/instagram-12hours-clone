@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 
-class CommentViewset(viewsets.ModelViewSet):
+class PostViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = PostSerializer
     queryset = Post.objects.all()
@@ -31,3 +31,13 @@ class PostLikeViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = PostLikeSerializer
     queryset = PostLike.objects.all()
+
+class CommentLikeViewset(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
+    serializer_class = CommentLikeSerializer
+    queryset = CommentLike.objects.all()
+
+class CommentViewset(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
