@@ -53,6 +53,7 @@ class PostLike(BaseModel):
     class Meta:
         unique_together = ('post', 'owner')
 
+
 class CommentLike(BaseModel):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="liked_comment", blank=True, null=True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="comment_liker")
