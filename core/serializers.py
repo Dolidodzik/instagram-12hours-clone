@@ -52,6 +52,11 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'owner', 'likesCount', 'text', 'is_already_liked', 'created_date', 'modified_date')
         read_only_fields =  ('id', 'likes', 'created_date', 'modified_date', 'owner')
 
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ('id', 'sender', 'receiver', 'content', 'created_date', 'modified_date')
+
 
 class PostLikeSerializer(serializers.ModelSerializer):
     class Meta:

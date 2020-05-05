@@ -4,6 +4,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.validators import MaxValueValidator, MinValueValidator
 from core.validators import *
+from django_mysql.models import ListCharField
+from django.db.models import CharField, Model
 
 
 class BaseModel(models.Model):
@@ -18,12 +20,19 @@ class CustomUser(AbstractUser, BaseModel):
     followedCount = models.IntegerField(default=0, validators=[MaxValueValidator(99999999), MinValueValidator(0)]) # users that are followed by this user
     description = models.TextField(default="")
     profile_image = models.ImageField(upload_to="profile_images/", default="defaults/profile_image.png", validators=[validate_image])
+    chatted_with = ListCharField( # list of users (user ids) that user chatted with
+        base_field=CharField(max_length=10),
+        size=10,
+        max_length=(10 * 20),  # 6 * 10 character nominals, plus commas
+        default=[]
+    )
 
     def save(self, *args, **kwargs):
         if not self.pk:
             self.followersCount = 0
             self.followedCount = 0
         super(CustomUser, self).save(*args, **kwargs)
+
 
 
 class Post(BaseModel):
@@ -53,9 +62,13 @@ class PostLike(BaseModel):
     class Meta:
         unique_together = ('post', 'owner')
 
-
 class CommentLike(BaseModel):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="liked_comment", blank=True, null=True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="comment_liker")
     class Meta:
         unique_together = ('comment', 'owner')
+
+class Message(BaseModel):
+    sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_sender")
+    receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_receiver")
+    content = models.CharField(max_length=300)

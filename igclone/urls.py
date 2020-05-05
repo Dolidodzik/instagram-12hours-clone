@@ -13,6 +13,7 @@ router.register(r'followships', views.FollowshipViewset)
 router.register(r'postLikes', views.PostLikeViewset)
 router.register(r'commentLikes', views.CommentLikeViewset)
 router.register(r'comments', views.CommentViewset)
+router.register(r'messages', views.MessageViewset)
 
 urlpatterns = [
     path('api/v0/', include(router.urls)),

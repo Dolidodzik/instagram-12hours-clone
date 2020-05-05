@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from rest_framework.views import APIView
 from django.db import IntegrityError
+import json
 
 
 class PostViewset(viewsets.ModelViewSet):
@@ -28,6 +29,34 @@ class FollowshipViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = FollowshipSerializer
     queryset = Followship.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        follow = request.query_params.get('follow')
+        user_id = request.query_params.get('user_id')
+        user = CustomUser.objects.filter(pk=user_id).first()
+
+        if request.user == user:
+            return Response("you cant follow your own profile")
+        if not user_id:
+            return Response("you need to provide data in get parameter like this: /?user_id=123&follow=yes")
+        if not user:
+            return Response("user not found")
+
+        request_user = request.user
+
+        if follow == "yes":
+            if not Followship.objects.filter(follower=request_user, followed=user).first():
+                followship = Followship.objects.create(follower=request_user, followed=user)
+                user.followersCount+=1
+                request_user.followedCount+=1
+        elif follow == "no":
+            if Followship.objects.filter(follower=request_user, followed=user).first():
+                followship = Followship.objects.filter(follower=request_user, followed=user).first().delete()
+                user.followersCount-=1
+                request_user.followedCount-=1
+        request_user.save()
+        user.save()
+        return Response({"followers_count": user.followersCount, "followed": follow})
 
 class PostLikeViewset(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
@@ -84,3 +113,40 @@ class CommentViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
+
+class MessageViewset(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
+    serializer_class = MessageSerializer
+    queryset = Message.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        chatted_with = request.user.chatted_with
+        conversations = []
+
+        for other_user_id in chatted_with:
+            other_user_id = int(other_user_id)
+            other_user = CustomUser.objects.filter(pk=other_user_id).first()
+            if other_user:
+                last_msg = Message.objects.filter(Q(sender=other_user, receiver=request.user) | Q(receiver=other_user, sender=request.user)).order_by("created_date").first()
+                conversations.append({"username": other_user.username, "profile_image": other_user.profile_image.url, "last_msg": last_msg.content, "who_sent_last_message": last_msg.sender.username})
+
+        return Response(conversations)
+
+    def create(self, request):
+        request_user = request.user
+        other_user = CustomUser.objects.filter(pk=request.data["receiver"]).first()
+
+        if not other_user:
+            return Response("given user does not exist")
+        if other_user == request_user:
+            return Response("you cannot message yourself")
+
+        if not Message.objects.filter(sender=request_user, receiver=other_user):
+            request_user.chatted_with.append(other_user.pk)
+            other_user.chatted_with.append(request_user.pk)
+            request_user.save()
+            other_user.save()
+
+        message = Message.objects.create(sender=request_user, receiver=other_user)
+
+        return Response(self.get_serializer(message).data)
