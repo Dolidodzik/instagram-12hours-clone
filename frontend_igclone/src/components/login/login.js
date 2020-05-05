@@ -8,6 +8,7 @@ export default class Login extends Component {
       this.state = {
         username: '',
         password: '',
+        areCredentialsIncorrect: false,
       };
       this.handleChange = this.handleChange.bind(this);
       this.handleSubmit = this.handleSubmit.bind(this);
@@ -16,28 +17,36 @@ export default class Login extends Component {
     handleSubmit(e){
 
       const data = JSON.stringify({
-        login: this.state.username,
+        username: this.state.username,
         password: this.state.password,
       })
 
       console.log(data)
 
-      fetch("http://localhost:8000/api/v0/accounts/login/", {
-        method: 'POST',
-        body: data,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      .then(res => res.json())
-      .then((result) => {
-        if(result.detail=="Login successful"){
-          this.props.history.push('/')
-        }
-      })
+      fetch('http://localhost:8000/api/v0/token_auth/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: data,
+			})
+			.then((response) => response.json())
+			.then((data) => {
+         console.log(data)
+				 if(data.token){
+            localStorage.setItem('auth_token', data.token);
+            this.props.history.push('/');
+				 }else{
+						this.setState({ areCredentialsIncorrect: true })
+				 }
+			})
+			.catch((error) => {
+				console.error('Error:', error);
+			});
 
       e.preventDefault();
     }
+
     handleChange(event){
       const target = event.target;
       const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -61,7 +70,7 @@ export default class Login extends Component {
 
           <button type="submit" className="btn btn-primary">Submit</button>
 
-          { this.state.success && <div> created account succesfully, here you can <a href="/login">login</a> </div> }
+          { this.state.areCredentialsIncorrect && <div> wrong password or login </div> }
 
         </form>
       )

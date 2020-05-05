@@ -1,6 +1,7 @@
 import React from 'react';
 import Register from './components/register';
 import Login from './components/login';
+import Home from './components/home';
 
 import {
   BrowserRouter as Router,
@@ -20,6 +21,12 @@ function App() {
           </Route>
 
           <Route path="/login" component={Login}>
+          </Route>
+
+          <Route path="/login" component={Login}>
+          </Route>
+
+          <Route path="/(home|)/" component={Home}>
           </Route>
 
         </Switch>

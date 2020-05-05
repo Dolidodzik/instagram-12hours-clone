@@ -38,9 +38,16 @@ class PostViewset(viewsets.ModelViewSet):
         return Response(PostSerializer(posts, many=True).data)
 
 class CustomUserViewset(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CustomUserSerializer
     queryset = CustomUser.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        if user:
+            return Response(CustomUserSerializer(request.user, context={"request": request}).data)
+        else:
+            return Response("null")
 
 class FollowshipViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, OwnProfilePermission]
